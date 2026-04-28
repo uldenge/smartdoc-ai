@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 A — 环境搭建与项目骨架
-- **当前步骤**: Step 3 — 安装核心依赖
-- **已完成步骤**: Step 1, Step 2
-- **下一步行动**: 安装 shadcn/ui、Supabase、Drizzle ORM 等核心依赖
+- **当前步骤**: Step 4 — 配置 Supabase
+- **已完成步骤**: Step 1, Step 2, Step 3
+- **下一步行动**: 注册 Supabase、创建项目、配置环境变量
 
 ---
 
@@ -31,4 +31,16 @@
 - **遇到的问题**: Git 未配置用户信息导致首次提交失败
 - **解决方案**: 用户提供用户名和邮箱后配置成功
 - **架构变化**: 项目创建在 D:/newmax/workspace/smartdoc-ai/
+- **待办**: 无
+
+### 2026-04-28 — Step 3: 安装核心依赖
+- **做了什么**:
+  - 初始化 shadcn/ui（New York 风格，Tailwind v4）
+  - 添加 11 个 UI 组件：button, input, card, dialog, label, textarea, dropdown-menu, avatar, separator, scroll-area, sheet, tooltip
+  - 安装后端依赖：@supabase/supabase-js, @supabase/ssr, drizzle-orm, postgres, drizzle-kit (dev), zustand
+  - 安装 AI 依赖：ai (Vercel AI SDK), @ai-sdk/openai, pdf-parse
+  - 验证 `pnpm build` 成功（Compiled in 6.2s, 零报错）
+- **遇到的问题**: 无
+- **解决方案**: N/A
+- **架构变化**: src/components/ui/ 下新增 11 个 shadcn 组件，src/lib/utils.ts 新增 cn 工具函数
 - **待办**: 无
