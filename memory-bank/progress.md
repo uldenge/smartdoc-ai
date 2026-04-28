@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 A — 环境搭建与项目骨架
-- **当前步骤**: Step 4 — 配置 Supabase
-- **已完成步骤**: Step 1, Step 2, Step 3
-- **下一步行动**: 注册 Supabase、创建项目、配置环境变量
+- **当前步骤**: Step 5 — 建立数据库 Schema
+- **已完成步骤**: Step 1, Step 2, Step 3, Step 4
+- **下一步行动**: 使用 Drizzle ORM 定义表结构并运行迁移
 
 ---
 
@@ -44,3 +44,16 @@
 - **解决方案**: N/A
 - **架构变化**: src/components/ui/ 下新增 11 个 shadcn 组件，src/lib/utils.ts 新增 cn 工具函数
 - **待办**: 无
+
+### 2026-04-28 — Step 4: 配置 Supabase
+- **做了什么**:
+  - 用户在 supabase.com 注册账号并创建项目 smartdoc-ai
+  - 获取 Project URL (https://mkjtwszlvmemxwqhydor.supabase.co) 和 anon public Key
+  - 创建 .env.local（含 Supabase 凭证）和 .env.example（模板）
+  - 创建 Supabase 客户端文件：client.ts（浏览器端）、server.ts（服务端）、middleware.ts（会话刷新）
+  - 创建 Next.js middleware 用于自动刷新认证会话
+  - 验证 `pnpm build` 成功
+- **遇到的问题**: 浏览器会话超时断开
+- **解决方案**: 改为手动操作指导，用户自行在浏览器注册 Supabase
+- **架构变化**: 新增 src/lib/supabase/ 目录（3 个文件）、src/middleware.ts
+- **待办**: 用户需在 Supabase Dashboard 启用 pgvector 扩展，DATABASE_URL 和 OPENAI_API_KEY 后续填写
