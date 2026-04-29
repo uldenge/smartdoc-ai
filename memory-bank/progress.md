@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 10 — 仪表盘页面
-- **已完成步骤**: Step 1 ~ Step 9
-- **下一步行动**: 实现仪表盘页面（知识库列表、新建/删除知识库）
+- **当前步骤**: Step 11 — 知识库详情页
+- **已完成步骤**: Step 1 ~ Step 10
+- **下一步行动**: 实现知识库详情页（文档列表、上传入口）
 
 ---
 
@@ -126,4 +126,19 @@
 - **遇到的问题**: 无
 - **解决方案**: N/A
 - **架构变化**: src/lib/supabase/middleware.ts 增加路由保护、新增 Sidebar 组件
+- **待办**: 无
+
+### 2026-04-29 — Step 10: 仪表盘页面（知识库管理）
+- **做了什么**:
+  - 创建知识库 CRUD API（GET/POST /api/knowledge-base, DELETE /api/knowledge-base/[id]）
+  - 用户数据隔离（所有查询加 user_id 过滤）
+  - 输入验证：名称必填、长度≤50、描述≤200、XSS 防护（trim/slice）
+  - 删除前验证所有权
+  - 创建 CreateKnowledgeBaseDialog 组件（弹窗表单）
+  - 创建 KnowledgeBaseList 组件（卡片网格 + 空状态 + 删除确认）
+  - Dashboard 页面集成知识库列表
+  - 测试：空列表→[]、创建→成功、重复→2条、删除→剩1条、名称为空→MISSING_NAME
+- **遇到的问题**: 无
+- **解决方案**: N/A
+- **架构变化**: 新增 src/app/api/knowledge-base/ 路由、src/components/knowledge-base/ 目录
 - **待办**: 无
