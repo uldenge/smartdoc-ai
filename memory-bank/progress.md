@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 7 — 实现注册页面
-- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6
-- **下一步行动**: 实现用户注册页面（表单 + Supabase Auth）
+- **当前步骤**: Step 8 — 实现登录页面
+- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6, Step 7
+- **下一步行动**: 实现登录页面（邮箱+密码登录，成功跳转 dashboard）
 
 ---
 
@@ -89,4 +89,16 @@
 - **遇到的问题**: shadcn/ui 新版（base-ui）不支持 asChild prop，Button 组件使用 render prop
 - **解决方案**: 改用 `render={<Link href="..." />}` 语法
 - **架构变化**: 完整目录结构已就位，7 个路由全部注册成功
+- **待办**: 无
+
+### 2026-04-29 — Step 7: 实现注册页面
+- **做了什么**:
+  - 创建注册 API 路由 (POST /api/auth/register)，含完整输入验证
+  - 创建 RegisterForm 客户端组件（邮箱、密码、确认密码）
+  - 前后端双重验证：空字段、邮箱格式、密码长度≥8、密码一致性
+  - 注册成功跳转到 /login?registered=true
+  - 测试验证：空字段→MISSING_FIELDS、错误邮箱→INVALID_EMAIL、短密码→PASSWORD_TOO_SHORT、正常注册→成功、重复注册→Supabase 限流保护
+- **遇到的问题**: 无
+- **解决方案**: N/A
+- **架构变化**: 新增 src/components/auth/ 目录、src/app/api/auth/register/ 路由
 - **待办**: 无
