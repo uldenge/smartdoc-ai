@@ -5,10 +5,10 @@
 ---
 
 ## 当前状态
-- **当前阶段**: 阶段 F — UI 打磨 + 部署
-- **当前步骤**: Step 17（下一步）
-- **已完成步骤**: Step 1 ~ Step 16（错误处理 + Toast 通知 + 加载状态）
-- **下一步行动**: UI 打磨（响应式、配色、favicon）
+- **当前阶段**: 阶段 F — 部署上线
+- **当前步骤**: Step 18（最后一步）
+- **已完成步骤**: Step 1 ~ Step 17（UI 打磨完成）
+- **下一步行动**: 部署到 Vercel
 
 ---
 
@@ -297,3 +297,30 @@
 - **解决方案**: N/A
 - **架构变化**: 新增 sonner 依赖、3 个 error/loading/not-found 页面
 - **Git 提交**: 9e8f244
+
+### 2026-04-29 — Step 17: UI 打磨
+- **做了什么**:
+  - 创建品牌图标：
+    - icon.svg: 紫色渐变背景 + 文档线条 + 金色 AI 图标
+    - apple-icon.tsx: 180x180 Apple touch icon（Next.js ImageResponse）
+    - opengraph-image.tsx: 1200x630 社交分享图（渐变背景 + Logo + 标语）
+  - 品牌配色主题：
+    - Light mode: Indigo/Purple 主色调（oklch 0.511 0.262 276.966）
+    - Dark mode: 亮紫色（oklch 0.648 0.222 272.314）
+    - Ring、Sidebar primary 等全部统一
+  - 首页 Landing Page 重新设计：
+    - Sticky 导航栏（毛玻璃效果）+ Logo + 登录/注册按钮
+    - Hero 区：渐变文字 + 标语 + 双 CTA 按钮
+    - 特性卡片：3 列功能展示（文档上传/语义检索/AI 问答）
+    - CTA 区 + 页脚
+  - 响应式移动端布局：
+    - Desktop (md+): 固定 240px 侧边栏
+    - Mobile (<md): 顶部导航栏 + Sheet 抽屉菜单
+    - Sidebar 组件拆分为 Sidebar + MobileNav
+    - SheetTrigger 使用 render prop（新版 shadcn/ui API）
+  - 侧边栏优化：导航图标 + Logo + 退出图标
+  - Metadata 增强：title template + keywords + 完整描述
+- **遇到的问题**: SheetTrigger 不支持 asChild prop（新版 shadcn/ui）
+- **解决方案**: 使用 render prop 语法
+- **架构变化**: sidebar.tsx 拆分为 Sidebar + MobileNav 两个导出
+- **Git 提交**: 6f089f9
