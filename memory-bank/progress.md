@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 A — 环境搭建与项目骨架
-- **当前步骤**: Step 5 — 建立数据库 Schema
-- **已完成步骤**: Step 1, Step 2, Step 3, Step 4
-- **下一步行动**: 使用 Drizzle ORM 定义表结构并运行迁移
+- **当前步骤**: Step 6 — 搭建项目目录结构
+- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5
+- **下一步行动**: 创建完整的项目目录结构、类型定义、基础布局
 
 ---
 
@@ -57,3 +57,22 @@
 - **解决方案**: 改为手动操作指导，用户自行在浏览器注册 Supabase
 - **架构变化**: 新增 src/lib/supabase/ 目录（3 个文件）、src/middleware.ts
 - **待办**: 用户需在 Supabase Dashboard 启用 pgvector 扩展，DATABASE_URL 和 OPENAI_API_KEY 后续填写
+
+### 2026-04-28 — Step 5: 建立数据库 Schema
+- **做了什么**:
+  - 通过 Supabase Management API 启用 pgvector 扩展
+  - 通过 Supabase SQL API 创建 5 张表：knowledge_bases, documents, document_chunks(含 vector(1536) + HNSW 索引), conversations, messages
+  - 创建 Drizzle ORM Schema 定义文件 (src/db/schema.ts)
+  - 创建数据库连接文件 (src/db/index.ts)
+  - 配置 drizzle-kit (drizzle.config.ts) 和 db:push/db:generate 脚本
+  - 验证所有表创建成功、`pnpm build` 通过
+- **遇到的问题**:
+  - 本地网络无法直连 Supabase 数据库（DNS 解析失败），drizzle-kit push 无法使用
+  - 最初用了错误的组织 ID
+  - DATABASE_URL 中密码特殊字符需要 URL 编码
+- **解决方案**:
+  - 改用 Supabase SQL API 直接建表，绕过网络限制
+  - 通过 Management API 获取正确的组织 ID (fidkzbtijadztxrkzyfk)
+  - 后续数据库操作将通过 Supabase Client 完成，而非 Drizzle 直连
+- **架构变化**: 新增 src/db/ 目录（schema.ts, index.ts）、drizzle.config.ts
+- **待办**: 部署时需确保 DATABASE_URL 可达，或继续使用 Supabase Client 模式
