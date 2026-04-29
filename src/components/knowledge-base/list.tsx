@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import Link from "next/link";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -32,12 +33,14 @@ export function KnowledgeBaseList() {
       const data = await res.json();
       if (!res.ok) {
         setError(data.error);
+        toast.error("加载知识库失败", { description: data.error });
         return;
       }
       setItems(data.data || []);
       setError("");
     } catch {
-      setError("加载失败");
+      setError("网络连接失败，请检查网络后重试");
+      toast.error("网络错误", { description: "无法连接服务器，请检查网络" });
     } finally {
       setLoading(false);
     }
@@ -57,12 +60,13 @@ export function KnowledgeBaseList() {
       });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error);
+        toast.error("删除失败", { description: data.error });
         return;
       }
       setItems((prev) => prev.filter((kb) => kb.id !== id));
+      toast.success("已删除", { description: `知识库「${name}」已删除` });
     } catch {
-      alert("删除失败，请重试");
+      toast.error("删除失败", { description: "网络错误，请重试" });
     } finally {
       setDeletingId(null);
     }

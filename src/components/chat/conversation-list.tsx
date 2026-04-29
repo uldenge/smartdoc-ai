@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 interface Conversation {
   id: string;
@@ -34,6 +35,7 @@ export function ConversationList({ activeId }: ConversationListProps) {
       }
     } catch (e) {
       console.error("加载对话列表失败:", e);
+      toast.error("加载对话失败", { description: "无法获取对话列表" });
     } finally {
       setLoading(false);
     }

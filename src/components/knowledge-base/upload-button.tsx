@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 
 interface UploadButtonProps {
@@ -20,22 +21,20 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
-  const [error, setError] = useState("");
 
   async function handleFileChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    setError("");
     setStatus("");
 
     if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(pdf|txt|md)$/i)) {
-      setError("仅支持 PDF、TXT、Markdown 文件");
+      toast.error("文件格式不支持", { description: "仅支持 PDF、TXT、Markdown 文件" });
       return;
     }
 
     if (file.size > MAX_FILE_SIZE) {
-      setError("文件大小不能超过 10MB");
+      toast.error("文件过大", { description: "文件大小不能超过 10MB" });
       return;
     }
 
@@ -56,12 +55,14 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
       const uploadData = await uploadRes.json();
 
       if (!uploadRes.ok) {
-        setError(uploadData.error);
+        toast.error("上传失败", { description: uploadData.error });
         return;
       }
 
+      toast.success("上传成功", { description: `${file.name} 已上传` });
+
       // Step 2: 自动触发文档处理
-      setStatus("处理中...");
+      setStatus("AI 处理中...");
       const processRes = await fetch("/api/documents/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -71,16 +72,15 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
       const processData = await processRes.json();
 
       if (!processRes.ok) {
-        // 处理失败不影响上传，但显示警告
-        setError(`上传成功但处理失败: ${processData.error}`);
+        toast.warning("处理未完成", { description: processData.error });
         onSuccess();
         return;
       }
 
-      setStatus("");
+      toast.success("处理完成", { description: `${file.name} 已可问答` });
       onSuccess();
     } catch {
-      setError("上传失败，请重试");
+      toast.error("上传失败", { description: "网络错误，请重试" });
     } finally {
       setUploading(false);
       setStatus("");
@@ -89,7 +89,7 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
   }
 
   return (
-    <div className="flex flex-col items-start gap-2">
+    <div>
       <input
         ref={inputRef}
         type="file"
@@ -102,11 +102,8 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
         onClick={() => inputRef.current?.click()}
         disabled={uploading}
       >
-        {uploading ? status || "上传中..." : "上传文档"}
+        {uploading ? (status || "上传中...") : "上传文档"}
       </Button>
-      {error && (
-        <p className="text-sm text-destructive">{error}</p>
-      )}
     </div>
   );
 }

@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatInput } from "@/components/chat/chat-input";
@@ -38,6 +39,7 @@ export function ChatContainer({
         }
       } catch (e) {
         console.error("加载消息失败:", e);
+        toast.error("加载失败", { description: "无法加载历史消息" });
       } finally {
         setIsLoading(false);
       }
@@ -122,12 +124,14 @@ export function ChatContainer({
         };
         setMessages((prev) => [...prev, aiMessage]);
       } catch (e) {
+        const errMsg = e instanceof Error ? e.message : "未知错误";
+        toast.error("发送失败", { description: errMsg });
         const errorMessage: Message = {
           id: `temp-err-${Date.now()}`,
           conversationId,
           userId: "",
           role: "assistant",
-          content: `出错了: ${e instanceof Error ? e.message : "未知错误"}`,
+          content: `抱歉，出错了：${errMsg}`,
           sources: null,
           createdAt: new Date().toISOString(),
         };

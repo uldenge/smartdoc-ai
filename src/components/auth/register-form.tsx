@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -62,13 +63,15 @@ export function RegisterForm() {
 
       if (!res.ok) {
         setError(data.error);
+        toast.error("注册失败", { description: data.error });
         return;
       }
 
-      // 注册成功，跳转到登录页
+      toast.success("注册成功", { description: "请登录你的账号" });
       router.push("/login?registered=true");
     } catch {
       setError("网络错误，请稍后重试");
+      toast.error("网络错误", { description: "无法连接服务器" });
     } finally {
       setLoading(false);
     }

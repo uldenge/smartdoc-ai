@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -53,13 +54,16 @@ export function LoginForm() {
 
       if (!res.ok) {
         setError(data.error);
+        toast.error("登录失败", { description: data.error });
         return;
       }
 
+      toast.success("登录成功", { description: "欢迎回来！" });
       router.push("/dashboard");
       router.refresh();
     } catch {
       setError("网络错误，请稍后重试");
+      toast.error("网络错误", { description: "无法连接服务器" });
     } finally {
       setLoading(false);
     }
