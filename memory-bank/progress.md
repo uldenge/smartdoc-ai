@@ -5,10 +5,10 @@
 ---
 
 ## 当前状态
-- **当前阶段**: 阶段 E — 完善与优化
-- **当前步骤**: Step 16（下一步）
-- **已完成步骤**: Step 1 ~ Step 15（对话 UI 完善 + Markdown 渲染）
-- **下一步行动**: 错误处理 + 加载状态 + UI 打磨
+- **当前阶段**: 阶段 F — UI 打磨 + 部署
+- **当前步骤**: Step 17（下一步）
+- **已完成步骤**: Step 1 ~ Step 16（错误处理 + Toast 通知 + 加载状态）
+- **下一步行动**: UI 打磨（响应式、配色、favicon）
 
 ---
 
@@ -273,3 +273,27 @@
 - **解决方案**: N/A
 - **架构变化**: 新增 /chat 页面路由、ConversationList 组件、Markdown 渲染
 - **Git 提交**: bc91f97
+
+### 2026-04-29 — Step 16: 错误处理 + 加载状态 + Toast 通知
+- **做了什么**:
+  - 安装 Sonner toast 库，集成到根布局（顶部居中、彩色图标、关闭按钮）
+  - 为 6 个交互组件添加 toast 通知：
+    - KnowledgeBaseList: 加载失败/删除成功/删除失败
+    - UploadButton: 文件类型错误/文件过大/上传成功/处理完成/处理未完成
+    - ChatContainer: 加载失败/发送失败
+    - ConversationList: 加载失败
+    - RegisterForm: 注册成功/注册失败/网络错误
+    - LoginForm: 登录成功/登录失败/网络错误
+  - 创建 loading.tsx 骨架屏：
+    - Dashboard: 标题骨架 + 3 个卡片骨架（animate-pulse）
+    - Auth: 弹跳动画 + 文字提示
+  - 创建 error.tsx 错误边界：
+    - 全局 error.tsx: emoji + 错误信息 + 重试/返回首页
+    - Dashboard error.tsx: 同上风格
+  - 创建 not-found.tsx 404 页面：大号 404 + 文字说明 + 导航按钮
+  - 移除所有 alert() 调用，统一使用 toast
+  - 测试：所有页面 200、已登录重定向 307、不存在路径 404
+- **遇到的问题**: 无
+- **解决方案**: N/A
+- **架构变化**: 新增 sonner 依赖、3 个 error/loading/not-found 页面
+- **Git 提交**: 9e8f244
