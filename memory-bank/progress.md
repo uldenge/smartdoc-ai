@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 13 — 文档处理（分块 + 向量化）
-- **已完成步骤**: Step 1 ~ Step 12
-- **下一步行动**: 实现文档处理管道（PDF 解析、文本分块、Embedding 向量化）
+- **当前步骤**: Step 14 — 语义检索 + RAG
+- **已完成步骤**: Step 1 ~ Step 13
+- **下一步行动**: 实现语义检索（向量相似度搜索）和 RAG 问答
 
 ---
 
@@ -170,3 +170,25 @@
 - **解决方案**: 通过 Management SQL API 端点执行 SQL 创建 bucket 和 RLS 策略，用文件传递 SQL 避免转义
 - **架构变化**: 新增 src/app/api/documents/upload/ 路由、Supabase Storage bucket + RLS
 - **待办**: 后续需要实现文档处理管道（分块 + 向量化）来将 pending 文档变为 ready
+
+### 2026-04-29 — Step 13: 文档处理管道
+- **做了什么**:
+  - 创建 src/lib/document.ts（文本提取 + 清洗 + 分块）
+    - PDF: pdf-parse v2 的 PDFParse API（new PDFParse + getText）
+    - TXT/MD: Buffer.toString
+    - 清洗：统一换行符、合并空行、去特殊字符
+    - 分块：500字/块、50字重叠、优先句子边界切分
+  - 创建 src/lib/ai.ts（Embedding 模块）
+    - 使用 Vercel AI SDK + @ai-sdk/openai
+    - 支持 OPENAI_BASE_URL（兼容 DeepSeek 等兼容 API）
+    - 批量 Embedding（每批最多 100 条）
+  - 创建 POST /api/documents/process 处理管道
+    - 完整流程：下载→提取→清洗→分块→Embedding→写入 document_chunks
+    - 状态流转：pending → processing → ready/error
+    - 每步失败都记录错误信息
+  - 更新 UploadButton：上传成功后自动调用 /api/documents/process
+  - 测试：TXT 处理流程正确走到 Embedding 步骤（因无 API Key 报错，符合预期）
+- **遇到的问题**: pdf-parse v2 没有默认导出，使用 named export { PDFParse }；构造函数需要 LoadParameters
+- **解决方案**: import { PDFParse } from "pdf-parse"，new PDFParse({ data: Uint8Array }) + getText()
+- **架构变化**: 新增 src/lib/document.ts、src/lib/ai.ts、src/app/api/documents/process/ 路由
+- **待办**: 需要配置 OPENAI_API_KEY 后 Embedding 才能工作
