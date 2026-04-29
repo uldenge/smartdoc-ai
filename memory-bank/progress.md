@@ -5,9 +5,9 @@
 ---
 
 ## 当前状态
-- **当前阶段**: 阶段 B — 用户认证
+- **当前阶段**: 阶段 D — AI 问答
 - **当前步骤**: Step 14 — 语义检索 + RAG
-- **已完成步骤**: Step 1 ~ Step 13
+- **已完成步骤**: Step 1 ~ Step 13（含 AI API 配置）
 - **下一步行动**: 实现语义检索（向量相似度搜索）和 RAG 问答
 
 ---
@@ -192,3 +192,22 @@
 - **解决方案**: import { PDFParse } from "pdf-parse"，new PDFParse({ data: Uint8Array }) + getText()
 - **架构变化**: 新增 src/lib/document.ts、src/lib/ai.ts、src/app/api/documents/process/ 路由
 - **待办**: 需要配置 OPENAI_API_KEY 后 Embedding 才能工作
+
+### 2026-04-29 — Step 13 补充: 配置双 API 架构
+- **做了什么**:
+  - 配置阿里百炼 Embedding 服务（EMBEDDING_API_KEY + EMBEDDING_BASE_URL + EMBEDDING_MODEL）
+  - 配置 DeepSeek Chat 服务（OPENAI_API_KEY + OPENAI_BASE_URL）
+  - 重写 src/lib/ai.ts：Embedding 用 fetch 直调阿里百炼 API（绕过 AI SDK 不支持 dimensions 参数的限制），Chat 用 AI SDK
+  - 数据库 document_chunks 表向量维度从 vector(1536) 调整为 vector(1024)（阿里百炼 text-embedding-v3 最大支持 1024 维）
+  - 更新 Drizzle Schema 定义中的维度为 1024
+  - 完整端到端测试：上传 test-ai-content.md → 文本提取 → 分块(2块) → Embedding 向量化 → 存入数据库 → 状态变为 ready
+- **遇到的问题**:
+  - DeepSeek 不提供 Embedding API
+  - 阿里百炼 text-embedding-v3 不支持 1536 维（只支持 64/128/256/512/768/1024）
+  - @ai-sdk/openai 的 embedding() 函数只接受 modelId 一个参数，不支持传 dimensions
+- **解决方案**:
+  - Embedding 和 Chat 分离为不同 API 提供商
+  - 数据库维度改为 1024
+  - Embedding 改用 fetch 直调 API，手动传 dimensions 参数
+- **架构变化**: .env.local 新增 EMBEDDING_API_KEY/BASE_URL/MODEL，ai.ts 改为双 API 架构
+- **Git 提交**: 370267b
