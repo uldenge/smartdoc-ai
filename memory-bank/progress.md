@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 9 — 实现认证中间件
-- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6, Step 7, Step 8
-- **下一步行动**: 实现认证中间件（保护 /dashboard 等路由，未登录跳转 /login）
+- **当前步骤**: Step 10 — 仪表盘页面
+- **已完成步骤**: Step 1 ~ Step 9
+- **下一步行动**: 实现仪表盘页面（知识库列表、新建/删除知识库）
 
 ---
 
@@ -114,3 +114,16 @@
 - **解决方案**: 通过 Management API 设置 mailer_autoconfirm=true，开发环境免邮箱验证
 - **架构变化**: 新增 src/app/api/auth/login/ 路由、src/components/auth/login-form.tsx
 - **待办**: 生产部署前需要重新开启邮箱确认
+
+### 2026-04-29 — Step 9: 实现认证中间件
+- **做了什么**:
+  - 更新 middleware 路由保护：未登录→/login，已登录访问 auth 页→/dashboard
+  - 创建登出 API (POST /api/auth/logout)
+  - 创建侧边栏组件（仪表盘、知识库、对话导航 + 退出按钮）
+  - 更新 dashboard 布局（侧边栏 + 主内容区 flex 布局）
+  - Dashboard 页面改为服务端组件，显示用户邮箱和欢迎卡片
+  - 测试：未登录→307→/login、已登录→200、已登录访问/login→307→/dashboard、登出成功
+- **遇到的问题**: 无
+- **解决方案**: N/A
+- **架构变化**: src/lib/supabase/middleware.ts 增加路由保护、新增 Sidebar 组件
+- **待办**: 无
