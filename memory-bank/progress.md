@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 12 — 文档上传 API
-- **已完成步骤**: Step 1 ~ Step 11
-- **下一步行动**: 实现文档上传 API（Supabase Storage + 文档处理）
+- **当前步骤**: Step 13 — 文档处理（分块 + 向量化）
+- **已完成步骤**: Step 1 ~ Step 12
+- **下一步行动**: 实现文档处理管道（PDF 解析、文本分块、Embedding 向量化）
 
 ---
 
@@ -154,4 +154,19 @@
 - **遇到的问题**: 服务端组件无法直接传递回调函数给客户端组件
 - **解决方案**: 创建 DetailContent 客户端包装组件，内部调用 router.refresh()
 - **架构变化**: 新增 src/app/api/documents/ 路由、detail-content.tsx、document-list.tsx、upload-button.tsx
-- **待办**: Step 12 实现 POST /api/documents/upload（上传按钮已就位，API 待实现）
+- **待办**: 无（已完成）
+
+### 2026-04-29 — Step 12: 文档上传 API
+- **做了什么**:
+  - 创建 POST /api/documents/upload 路由（FormData 接收 file + knowledgeBaseId）
+  - 服务端验证：登录状态、文件类型（PDF/TXT/MD）、大小≤10MB、知识库所有权
+  - 上传到 Supabase Storage（documents bucket），路径: {userId}/{kbId}/{timestamp}_{filename}
+  - 数据库创建文档记录（status=pending，等待后续处理管道）
+  - 失败时回滚已上传的 Storage 文件
+  - 通过 Management API 创建 Storage bucket（documents，10MB 限制）
+  - 创建 Storage RLS 策略（用户只能操作自己目录下的文件：INSERT/SELECT/DELETE）
+  - 测试：上传 TXT→成功（56B）、无文件→MISSING_FILE、无 KB ID→MISSING_PARAM、.exe→INVALID_TYPE
+- **遇到的问题**: Management Token 不能直接用于 Storage API，curl 传递多行 SQL 有转义问题
+- **解决方案**: 通过 Management SQL API 端点执行 SQL 创建 bucket 和 RLS 策略，用文件传递 SQL 避免转义
+- **架构变化**: 新增 src/app/api/documents/upload/ 路由、Supabase Storage bucket + RLS
+- **待办**: 后续需要实现文档处理管道（分块 + 向量化）来将 pending 文档变为 ready
