@@ -96,7 +96,7 @@ function getChatClient() {
  */
 export function streamChat(messages: Array<{ role: "user" | "assistant" | "system"; content: string }>) {
   return streamText({
-    model: getChatClient()(CHAT_MODEL),
+    model: getChatClient().chat(CHAT_MODEL),
     messages,
   });
 }
