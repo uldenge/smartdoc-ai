@@ -5,10 +5,10 @@
 ---
 
 ## 当前状态
-- **当前阶段**: 阶段 A — 环境搭建与项目骨架
-- **当前步骤**: Step 6 — 搭建项目目录结构
-- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5
-- **下一步行动**: 创建完整的项目目录结构、类型定义、基础布局
+- **当前阶段**: 阶段 B — 用户认证
+- **当前步骤**: Step 7 — 实现注册页面
+- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6
+- **下一步行动**: 实现用户注册页面（表单 + Supabase Auth）
 
 ---
 
@@ -76,3 +76,17 @@
   - 后续数据库操作将通过 Supabase Client 完成，而非 Drizzle 直连
 - **架构变化**: 新增 src/db/ 目录（schema.ts, index.ts）、drizzle.config.ts
 - **待办**: 部署时需确保 DATABASE_URL 可达，或继续使用 Supabase Client 模式
+
+### 2026-04-29 — Step 6: 搭建项目目录结构
+- **做了什么**:
+  - 创建完整路由组结构：(auth)/login、(auth)/register、(dashboard)/dashboard、(dashboard)/knowledge-base/[id]、(dashboard)/chat/[id]
+  - 创建 API 路由目录：api/auth、api/knowledge-base、api/documents、api/chat
+  - 创建组件目录：components/chat、components/knowledge-base、components/layout
+  - 添加 TypeScript 类型定义（KnowledgeBase, Document, DocumentChunk, Conversation, Message 等）
+  - 更新根布局（中文 lang、SmartDoc AI metadata）
+  - 创建首页 Landing Page（登录/注册入口）
+  - 创建 (auth) 和 (dashboard) 路由组各自的布局
+- **遇到的问题**: shadcn/ui 新版（base-ui）不支持 asChild prop，Button 组件使用 render prop
+- **解决方案**: 改用 `render={<Link href="..." />}` 语法
+- **架构变化**: 完整目录结构已就位，7 个路由全部注册成功
+- **待办**: 无
