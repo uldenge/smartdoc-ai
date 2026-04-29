@@ -47,7 +47,7 @@ export const documentChunks = pgTable(
     userId: text("user_id").notNull(),
     content: text("content").notNull(),
     metadata: jsonb("metadata"), // { page, position, source }
-    embedding: vector("embedding", { dimensions: 1536 }),
+    embedding: vector("embedding", { dimensions: 1024 }),
     createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
