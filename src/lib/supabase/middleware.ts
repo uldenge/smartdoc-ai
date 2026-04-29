@@ -1,6 +1,12 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
+// 需要登录才能访问的路径前缀
+const PROTECTED_PATHS = ["/dashboard", "/knowledge-base", "/chat"];
+
+// 已登录用户不应访问的路径（会重定向到 dashboard）
+const AUTH_PATHS = ["/login", "/register"];
+
 export async function updateSession(request: NextRequest) {
   let supabaseResponse = NextResponse.next({
     request,
@@ -29,7 +35,25 @@ export async function updateSession(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getUser();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  const { pathname } = request.nextUrl;
+
+  // 未登录用户访问受保护页面 → 跳转登录
+  if (!user && PROTECTED_PATHS.some((path) => pathname.startsWith(path))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    return NextResponse.redirect(url);
+  }
+
+  // 已登录用户访问 auth 页面 → 跳转 dashboard
+  if (user && AUTH_PATHS.some((path) => pathname.startsWith(path))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/dashboard";
+    return NextResponse.redirect(url);
+  }
 
   return supabaseResponse;
 }
