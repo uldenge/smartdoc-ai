@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import { ConversationList } from "@/components/chat/conversation-list";
 import { MessageList } from "@/components/chat/message-list";
 import { ChatInput } from "@/components/chat/chat-input";
 import type { Message, MessageSource } from "@/types";
@@ -22,6 +23,7 @@ export function ChatContainer({
   const [isLoading, setIsLoading] = useState(true);
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState("");
+  const [sidebarOpen, setSidebarOpen] = useState(true);
 
   // 加载历史消息
   useEffect(() => {
@@ -47,7 +49,6 @@ export function ChatContainer({
   // 发送消息 + 流式接收 AI 回答
   const handleSend = useCallback(
     async (content: string) => {
-      // 添加用户消息到 UI（乐观更新）
       const userMessage: Message = {
         id: `temp-${Date.now()}`,
         conversationId,
@@ -110,7 +111,6 @@ export function ChatContainer({
           }
         }
 
-        // 添加 AI 回复到消息列表
         const aiMessage: Message = {
           id: `temp-ai-${Date.now()}`,
           conversationId,
@@ -154,37 +154,121 @@ export function ChatContainer({
     });
   }
 
-  if (isLoading) {
-    return (
-      <div className="flex flex-1 items-center justify-center">
-        <p className="text-muted-foreground">加载中...</p>
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-col h-full">
-      {/* 头部 */}
-      <div className="border-b px-4 py-3 flex items-center justify-between">
-        <div>
-          <h2 className="text-sm font-medium">{knowledgeBaseName}</h2>
-          <p className="text-xs text-muted-foreground">
-            基于知识库的 AI 问答
-          </p>
+    <div className="flex h-full">
+      {/* 左侧：对话历史侧边栏 */}
+      {sidebarOpen && (
+        <div className="w-72 border-r flex flex-col shrink-0">
+          <div className="p-4 border-b flex items-center justify-between">
+            <h2 className="text-sm font-semibold">对话历史</h2>
+            <button
+              onClick={() => setSidebarOpen(false)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="收起侧边栏"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </button>
+          </div>
+          <div className="flex-1 overflow-y-auto">
+            <ConversationList activeId={conversationId} />
+          </div>
+          <div className="p-3 border-t">
+            <a
+              href="/dashboard"
+              className="block w-full rounded-lg border px-3 py-2 text-center text-sm text-muted-foreground hover:bg-muted hover:text-foreground transition-colors"
+            >
+              + 从知识库新建对话
+            </a>
+          </div>
         </div>
-        <button
-          onClick={() => router.push("/dashboard")}
-          className="text-sm text-muted-foreground hover:text-foreground transition-colors"
-        >
-          返回仪表盘
-        </button>
+      )}
+
+      {/* 右侧：聊天主区域 */}
+      <div className="flex flex-col flex-1 min-w-0">
+        {/* 顶部栏 */}
+        <div className="border-b px-4 py-3 flex items-center gap-3">
+          {!sidebarOpen && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              className="text-muted-foreground hover:text-foreground transition-colors shrink-0"
+              title="展开侧边栏"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <rect width="18" height="18" x="3" y="3" rx="2" />
+                <path d="M9 3v18" />
+              </svg>
+            </button>
+          )}
+          <div className="flex-1 min-w-0">
+            <h2 className="text-sm font-medium truncate">
+              {knowledgeBaseName}
+            </h2>
+            <p className="text-xs text-muted-foreground">
+              基于知识库的 AI 问答
+            </p>
+          </div>
+          <button
+            onClick={() => router.push("/dashboard")}
+            className="text-sm text-muted-foreground hover:text-foreground transition-colors shrink-0"
+          >
+            返回仪表盘
+          </button>
+        </div>
+
+        {/* 消息列表 */}
+        {isLoading ? (
+          <div className="flex flex-1 items-center justify-center">
+            <div className="text-center space-y-2">
+              <div className="inline-flex items-center gap-1">
+                <span
+                  className="inline-block w-2 h-2 bg-foreground/40 rounded-full animate-bounce"
+                  style={{ animationDelay: "0ms" }}
+                />
+                <span
+                  className="inline-block w-2 h-2 bg-foreground/40 rounded-full animate-bounce"
+                  style={{ animationDelay: "150ms" }}
+                />
+                <span
+                  className="inline-block w-2 h-2 bg-foreground/40 rounded-full animate-bounce"
+                  style={{ animationDelay: "300ms" }}
+                />
+              </div>
+              <p className="text-sm text-muted-foreground">加载中...</p>
+            </div>
+          </div>
+        ) : (
+          <MessageList
+            messages={displayMessages}
+            isStreaming={isStreaming && !streamingContent}
+          />
+        )}
+
+        {/* 输入框 */}
+        <ChatInput onSend={handleSend} disabled={isStreaming || isLoading} />
       </div>
-
-      {/* 消息列表 */}
-      <MessageList messages={displayMessages} isStreaming={isStreaming && !streamingContent} />
-
-      {/* 输入框 */}
-      <ChatInput onSend={handleSend} disabled={isStreaming} />
     </div>
   );
 }
