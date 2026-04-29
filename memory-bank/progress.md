@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 8 — 实现登录页面
-- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6, Step 7
-- **下一步行动**: 实现登录页面（邮箱+密码登录，成功跳转 dashboard）
+- **当前步骤**: Step 9 — 实现认证中间件
+- **已完成步骤**: Step 1, Step 2, Step 3, Step 4, Step 5, Step 6, Step 7, Step 8
+- **下一步行动**: 实现认证中间件（保护 /dashboard 等路由，未登录跳转 /login）
 
 ---
 
@@ -102,3 +102,15 @@
 - **解决方案**: N/A
 - **架构变化**: 新增 src/components/auth/ 目录、src/app/api/auth/register/ 路由
 - **待办**: 无
+
+### 2026-04-29 — Step 8: 实现登录页面
+- **做了什么**:
+  - 创建登录 API 路由 (POST /api/auth/login)，含输入验证和 Supabase Auth signInWithPassword
+  - 创建 LoginForm 客户端组件（邮箱+密码、注册成功提示、错误处理、加载状态）
+  - 登录页用 Suspense 包裹（Next.js 15+ 要求 useSearchParams 必须在 Suspense 内）
+  - 通过 Supabase Management API 关闭邮箱确认要求（开发环境用 mailer_autoconfirm=true）
+  - 测试验证：空字段→MISSING_FIELDS、错误密码→LOGIN_FAILED、正确登录→成功
+- **遇到的问题**: Supabase 默认要求邮箱确认才能登录（"Email not confirmed"）
+- **解决方案**: 通过 Management API 设置 mailer_autoconfirm=true，开发环境免邮箱验证
+- **架构变化**: 新增 src/app/api/auth/login/ 路由、src/components/auth/login-form.tsx
+- **待办**: 生产部署前需要重新开启邮箱确认
