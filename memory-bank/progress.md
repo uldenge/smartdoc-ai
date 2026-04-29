@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 B — 用户认证
-- **当前步骤**: Step 11 — 知识库详情页
-- **已完成步骤**: Step 1 ~ Step 10
-- **下一步行动**: 实现知识库详情页（文档列表、上传入口）
+- **当前步骤**: Step 12 — 文档上传 API
+- **已完成步骤**: Step 1 ~ Step 11
+- **下一步行动**: 实现文档上传 API（Supabase Storage + 文档处理）
 
 ---
 
@@ -142,3 +142,16 @@
 - **解决方案**: N/A
 - **架构变化**: 新增 src/app/api/knowledge-base/ 路由、src/components/knowledge-base/ 目录
 - **待办**: 无
+
+### 2026-04-29 — Step 11: 知识库详情页
+- **做了什么**:
+  - 创建文档列表 API（GET /api/documents?knowledgeBaseId=, DELETE /api/documents/[id]）
+  - 创建 DocumentList 组件（文档卡片、状态标签、大小格式化、错误展示、删除确认）
+  - 创建 UploadButton 组件（文件选择 + 前端验证：类型限制 PDF/TXT/MD、大小≤10MB）
+  - 创建 DetailContent 客户端包装组件（上传成功刷新列表）
+  - 知识库详情页：服务端获取知识库信息 + 面包屑导航 + 客户端文档列表
+  - 测试：空列表→[]、缺少参数→MISSING_PARAM、详情页→200、不存在→307→/dashboard
+- **遇到的问题**: 服务端组件无法直接传递回调函数给客户端组件
+- **解决方案**: 创建 DetailContent 客户端包装组件，内部调用 router.refresh()
+- **架构变化**: 新增 src/app/api/documents/ 路由、detail-content.tsx、document-list.tsx、upload-button.tsx
+- **待办**: Step 12 实现 POST /api/documents/upload（上传按钮已就位，API 待实现）
