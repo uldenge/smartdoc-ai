@@ -6,9 +6,9 @@
 
 ## 当前状态
 - **当前阶段**: 阶段 D — AI 问答
-- **当前步骤**: Step 14 — 语义检索 + RAG
-- **已完成步骤**: Step 1 ~ Step 13（含 AI API 配置）
-- **下一步行动**: 实现语义检索（向量相似度搜索）和 RAG 问答
+- **当前步骤**: Step 15（下一步）
+- **已完成步骤**: Step 1 ~ Step 14（RAG 语义检索 + 流式问答已完成）
+- **下一步行动**: 完善对话界面 UI 和交互体验
 
 ---
 
@@ -211,3 +211,40 @@
   - Embedding 改用 fetch 直调 API，手动传 dimensions 参数
 - **架构变化**: .env.local 新增 EMBEDDING_API_KEY/BASE_URL/MODEL，ai.ts 改为双 API 架构
 - **Git 提交**: 370267b
+
+### 2026-04-29 — Step 14: 语义检索 + RAG 流式问答
+- **做了什么**:
+  - 创建 src/lib/rag.ts（RAG 核心模块）
+    - searchSimilarChunks: 通过 Supabase RPC 函数 match_documents 做向量相似度搜索
+    - buildRAGPrompt: 将检索到的文档片段组装成 RAG 上下文
+    - extractSources: 从搜索结果提取引用来源
+    - SYSTEM_PROMPT: 知识库问答助手的系统提示词
+  - 在 Supabase 创建 match_documents RPC 函数（余弦距离向量搜索，支持过滤 knowledge_base_id 和 user_id）
+  - 创建对话 CRUD API：GET/POST /api/chat（列表/创建）、GET /api/chat/messages（历史消息）
+  - 创建流式问答 API：POST /api/chat/message
+    - 完整流程：验证对话所有权 → 保存用户消息 → RAG 语义检索 → 构建上下文 → 流式调用 DeepSeek → 保存 AI 回答
+    - SSE 流式格式：data: {"text":"..."} + data: {"done":true,"sources":[...]}
+  - 创建 3 个聊天组件：
+    - ChatContainer: 管理对话状态、SSE 流式解析、自动滚动
+    - ChatInput: 输入框 + 发送按钮 + Ctrl+Enter 快捷键
+    - MessageList: 消息气泡 + 来源引用 + 打字动画效果
+  - 更新知识库详情页：添加"开始对话"按钮
+  - 更新对话页面：服务端获取对话信息 + 客户端聊天交互
+  - 修复 @ai-sdk/openai v3.x 兼容性问题：
+    - v3 默认使用 OpenAI Responses API（/responses），DeepSeek 不支持返回 404
+    - 解决方案：使用 client.chat() 方法强制走 Chat Completions API（/chat/completions）
+  - 端到端测试全部通过：
+    - 创建对话 → 成功
+    - 单轮问答 "请详细解释RAG的工作原理" → AI 基于知识库精准回答 + 引用来源
+    - 多轮对话 "向量数据库在哪些场景中使用" → 正确理解上下文并回答
+    - 流式输出 240 行 SSE 数据，文字流畅
+    - 消息历史 API 正常返回（含 sources）
+    - 页面渲染：/dashboard 200、/chat/[id] 200、/knowledge-base/[id] 200
+- **遇到的问题**:
+  - @ai-sdk/openai v3.x 默认使用 Responses API 而非 Chat Completions API
+  - DeepSeek 不支持 /responses 端点，返回 404
+  - streamText 返回空文本但 sources 正常
+- **解决方案**:
+  - 将 client(model) 改为 client.chat(model)，强制走 /chat/completions 端点
+- **架构变化**: 新增 src/lib/rag.ts、src/app/api/chat/（3 个路由）、src/components/chat/（3 个组件）
+- **Git 提交**: 247ade2
