@@ -14,8 +14,20 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "SmartDoc AI — AI 知识库问答系统",
-  description: "上传文档，构建知识库，用自然语言提问获得精准回答",
+  title: {
+    default: "SmartDoc AI — AI 知识库问答系统",
+    template: "%s | SmartDoc AI",
+  },
+  description:
+    "上传文档，构建知识库，用自然语言提问获得精准回答。基于 RAG 技术的 AI 知识库问答系统。",
+  keywords: [
+    "AI 知识库",
+    "RAG",
+    "文档问答",
+    "向量数据库",
+    "知识管理",
+    "SmartDoc",
+  ],
 };
 
 export default function RootLayout({
