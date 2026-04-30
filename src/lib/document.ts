@@ -1,4 +1,7 @@
-import { PDFParse } from "pdf-parse";
+import { execFile } from "child_process";
+import { join } from "path";
+import { tmpdir } from "os";
+import { writeFileSync, unlinkSync } from "fs";
 
 // ==================== 文本提取 ====================
 
@@ -17,22 +20,80 @@ export async function extractText(
   }
 }
 
+/**
+ * 通过子进程调用独立脚本解析 PDF
+ * 绕过 Next.js Turbopack 的 Worker 限制
+ * 纯 Node.js 环境中 pathToFileURL 可靠工作
+ */
 async function extractPdfText(buffer: Buffer): Promise<string> {
-  const parser = new PDFParse({ data: new Uint8Array(buffer) });
-  const result = await parser.getText();
-  await parser.destroy();
-  return result.text;
+  // 将 buffer 写入临时文件
+  const tmpFile = join(tmpdir(), `smartdoc-pdf-${Date.now()}.pdf`);
+  writeFileSync(tmpFile, buffer);
+
+  // 动态构建脚本路径（避免 Turbopack 静态分析报错）
+  const cwd = process.cwd();
+  const scriptSegments = [cwd, "src", "scripts", "pdf-extract.mjs"];
+  const scriptPath = scriptSegments.join("/");
+
+  try {
+    const result = await new Promise<{ text: string; pages: number }>(
+      (resolve, reject) => {
+        execFile(
+          "node",
+          [scriptPath, tmpFile],
+          {
+            timeout: 30000,
+            maxBuffer: 10 * 1024 * 1024, // 10MB
+          },
+          (error, stdout, stderr) => {
+            if (error) {
+              reject(new Error(error.message));
+              return;
+            }
+            try {
+              // 从 stdout 中提取 __PDF_RESULT__ 标记之间的 JSON
+              const marker = "__PDF_RESULT__";
+              const startIdx = stdout.indexOf(marker);
+              const endIdx = stdout.lastIndexOf(marker);
+              if (startIdx === -1 || endIdx === startIdx) {
+                reject(new Error(stderr || "PDF 解析输出解析失败"));
+                return;
+              }
+              const jsonStr = stdout.substring(startIdx + marker.length, endIdx);
+              const parsed = JSON.parse(jsonStr);
+              if (parsed.error) {
+                reject(new Error(parsed.error));
+                return;
+              }
+              resolve(parsed);
+            } catch {
+              reject(new Error(stderr || "PDF 解析输出解析失败"));
+            }
+          }
+        );
+      }
+    );
+
+    return result.text;
+  } finally {
+    // 清理临时文件
+    try {
+      unlinkSync(tmpFile);
+    } catch {
+      // 忽略清理失败
+    }
+  }
 }
 
 // ==================== 文本清洗 ====================
 
 export function cleanText(raw: string): string {
   return raw
-    .replace(/\0/g, "")           // 去除空字符
-    .replace(/\r\n/g, "\n")       // 统一换行符
-    .replace(/\t/g, " ")          // Tab 转空格
-    .replace(/[ \t]+/g, " ")      // 多空格合并
-    .replace(/\n{3,}/g, "\n\n")   // 多空行合并为两个
+    .replace(/\0/g, "") // 去除空字符
+    .replace(/\r\n/g, "\n") // 统一换行符
+    .replace(/\t/g, " ") // Tab 转空格
+    .replace(/[ \t]+/g, " ") // 多空格合并
+    .replace(/\n{3,}/g, "\n\n") // 多空行合并为两个
     .trim();
 }
 
