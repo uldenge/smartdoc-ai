@@ -102,6 +102,9 @@ importers:
       '@types/react-dom':
         specifier: ^19
         version: 19.2.3(@types/react@19.2.14)
+      adm-zip:
+        specifier: ^0.5.17
+        version: 0.5.17
       docx:
         specifier: ^9.6.1
         version: 9.6.1

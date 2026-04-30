@@ -129,7 +129,7 @@ async function extractXlsx(buffer) {
 
 // ==================== EPUB 解析 ====================
 async function extractEpub(buffer) {
-  const EPub = (await import("epub2")).default;
+  const { EPub } = await import("epub2");
   const tmpFile = path.join(
     process.env.TEMP || process.env.TMP || "/tmp",
     `smartdoc-epub-${Date.now()}.epub`
