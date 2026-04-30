@@ -10,7 +10,7 @@ const FEATURES = [
       </svg>
     ),
     title: "文档上传",
-    desc: "支持 PDF、TXT、Markdown 格式，一键上传自动解析",
+    desc: "支持 PDF、Office、EPUB 等 7 种格式，一键上传自动解析",
   },
   {
     icon: (
@@ -79,7 +79,7 @@ export default function HomePage() {
             </span>
           </h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg text-muted-foreground leading-relaxed">
-            上传你的文档，SmartDoc AI 会自动解析、分块、向量化。
+            上传你的 PDF、Office 文档或 EPUB 电子书，SmartDoc AI 会自动解析、分块、向量化。
             用自然语言提问，AI 基于你的文档内容精准回答，并标注来源。
           </p>
           <div className="mt-10 flex flex-col sm:flex-row items-center justify-center gap-4">

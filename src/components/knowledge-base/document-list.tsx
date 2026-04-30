@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback } from "react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -37,10 +38,14 @@ function formatFileSize(bytes: number): string {
 
 function getFileIcon(type: string): string {
   switch (type) {
-    case "pdf": return "PDF";
-    case "txt": return "TXT";
-    case "md": return "MD";
-    default: return type.toUpperCase();
+    case "pdf":  return "PDF";
+    case "docx": return "DOCX";
+    case "pptx": return "PPTX";
+    case "xlsx": return "XLSX";
+    case "epub": return "EPUB";
+    case "txt":  return "TXT";
+    case "md":   return "MD";
+    default:     return type.toUpperCase();
   }
 }
 
@@ -81,12 +86,13 @@ export function DocumentList({ knowledgeBaseId }: DocumentListProps) {
       const res = await fetch(`/api/documents/${id}`, { method: "DELETE" });
       if (!res.ok) {
         const data = await res.json();
-        alert(data.error);
+        toast.error("删除失败", { description: data.error });
         return;
       }
       setDocs((prev) => prev.filter((d) => d.id !== id));
+      toast.success("已删除", { description: `文档「${name}」已删除` });
     } catch {
-      alert("删除失败，请重试");
+      toast.error("删除失败", { description: "网络错误，请重试" });
     } finally {
       setDeletingId(null);
     }
@@ -112,7 +118,7 @@ export function DocumentList({ knowledgeBaseId }: DocumentListProps) {
     return (
       <div className="flex flex-col items-center justify-center rounded-xl border border-dashed py-12 text-center">
         <p className="text-muted-foreground">
-          还没有文档，上传 PDF、TXT 或 Markdown 文件开始构建知识库
+          还没有文档，上传 PDF、TXT、MD、DOCX、PPTX、XLSX 或 EPUB 文件开始构建知识库
         </p>
       </div>
     );

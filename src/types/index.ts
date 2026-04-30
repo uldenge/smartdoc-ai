@@ -23,7 +23,7 @@ export interface Document {
   knowledgeBaseId: string;
   userId: string;
   name: string;
-  type: "pdf" | "txt" | "md";
+  type: "pdf" | "txt" | "md" | "docx" | "pptx" | "xlsx" | "epub";
   storagePath: string;
   sizeBytes: number;
   status: DocumentStatus;
