@@ -20,8 +20,8 @@ async function callEmbeddingAPI(texts: string[]): Promise<number[][]> {
     process.env.EMBEDDING_BASE_URL || process.env.OPENAI_BASE_URL || "https://api.openai.com/v1";
   const modelName = process.env.EMBEDDING_MODEL || EMBEDDING_MODEL;
 
-  // 每批最多 25 条（阿里百炼限制）
-  const batchSize = 25;
+  // 每批最多 10 条（阿里百炼 text-embedding-v3 限制 batch ≤ 10）
+  const batchSize = 10;
   const allEmbeddings: number[][] = [];
 
   for (let i = 0; i < texts.length; i += batchSize) {
