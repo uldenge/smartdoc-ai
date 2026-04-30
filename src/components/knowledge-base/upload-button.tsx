@@ -13,11 +13,22 @@ const ACCEPTED_TYPES = [
   "application/pdf",
   "text/plain",
   "text/markdown",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  "application/epub+zip",
 ];
+
+const ACCEPTED_EXTENSIONS = /\.(pdf|txt|md|docx|pptx|xlsx|epub)$/i;
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
-export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) {
+const FILE_TYPE_LABEL = "PDF、TXT、Markdown、DOCX、PPTX、XLSX、EPUB";
+
+export function UploadButton({
+  knowledgeBaseId,
+  onSuccess,
+}: UploadButtonProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [status, setStatus] = useState("");
@@ -28,8 +39,13 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
 
     setStatus("");
 
-    if (!ACCEPTED_TYPES.includes(file.type) && !file.name.match(/\.(pdf|txt|md)$/i)) {
-      toast.error("文件格式不支持", { description: "仅支持 PDF、TXT、Markdown 文件" });
+    if (
+      !ACCEPTED_TYPES.includes(file.type) &&
+      !file.name.match(ACCEPTED_EXTENSIONS)
+    ) {
+      toast.error("文件格式不支持", {
+        description: `仅支持 ${FILE_TYPE_LABEL} 文件`,
+      });
       return;
     }
 
@@ -93,7 +109,7 @@ export function UploadButton({ knowledgeBaseId, onSuccess }: UploadButtonProps) 
       <input
         ref={inputRef}
         type="file"
-        accept=".pdf,.txt,.md"
+        accept=".pdf,.txt,.md,.docx,.pptx,.xlsx,.epub"
         onChange={handleFileChange}
         className="hidden"
         disabled={uploading}

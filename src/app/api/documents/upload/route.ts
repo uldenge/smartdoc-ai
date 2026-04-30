@@ -1,13 +1,20 @@
 import { createClient } from "@/lib/supabase/server";
 import { NextResponse } from "next/server";
+import { SUPPORTED_EXTENSIONS } from "@/lib/document";
 
-const ALLOWED_EXTENSIONS = ["pdf", "txt", "md"];
+const ALLOWED_EXTENSIONS: string[] = [...SUPPORTED_EXTENSIONS];
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
-const ALLOWED_MIME_TYPES = [
-  "application/pdf",
-  "text/plain",
-  "text/markdown",
-];
+const ALLOWED_MIME_TYPES: Record<string, string> = {
+  pdf: "application/pdf",
+  txt: "text/plain",
+  md: "text/markdown",
+  docx: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  pptx: "application/vnd.openxmlformats-officedocument.presentationml.presentation",
+  xlsx: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+  epub: "application/epub+zip",
+};
+
+const FILE_TYPE_LABEL = "PDF、TXT、Markdown、DOCX、PPTX、XLSX、EPUB";
 
 export async function POST(request: Request) {
   try {
@@ -60,7 +67,7 @@ export async function POST(request: Request) {
     const ext = file.name.split(".").pop()?.toLowerCase() || "";
     if (!ALLOWED_EXTENSIONS.includes(ext)) {
       return NextResponse.json(
-        { error: "仅支持 PDF、TXT、Markdown 文件", code: "INVALID_TYPE" },
+        { error: `仅支持 ${FILE_TYPE_LABEL} 文件`, code: "INVALID_TYPE" },
         { status: 400 }
       );
     }

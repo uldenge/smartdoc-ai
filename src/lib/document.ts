@@ -3,47 +3,63 @@ import { join } from "path";
 import { tmpdir } from "os";
 import { writeFileSync, unlinkSync } from "fs";
 
+/** 支持的文件类型 */
+export const SUPPORTED_EXTENSIONS = [
+  "pdf",
+  "txt",
+  "md",
+  "docx",
+  "pptx",
+  "xlsx",
+  "epub",
+] as const;
+
+export type SupportedExtension = (typeof SUPPORTED_EXTENSIONS)[number];
+
 // ==================== 文本提取 ====================
 
 export async function extractText(
   buffer: Buffer,
   fileType: string
 ): Promise<string> {
-  switch (fileType) {
-    case "pdf":
-      return extractPdfText(buffer);
-    case "txt":
-    case "md":
-      return buffer.toString("utf-8");
-    default:
-      throw new Error(`不支持的文件类型: ${fileType}`);
+  const ext = fileType.toLowerCase();
+
+  // TXT/MD 可以直接在进程中处理，无需子进程
+  if (ext === "txt" || ext === "md") {
+    return buffer.toString("utf-8");
   }
+
+  // 其他格式统一通过子进程调用 doc-extract.mjs
+  return extractViaChildProcess(buffer, ext);
 }
 
 /**
- * 通过子进程调用独立脚本解析 PDF
- * 绕过 Next.js Turbopack 的 Worker 限制
+ * 通过子进程调用独立脚本解析文档
+ * 绕过 Next.js Turbopack 的 Worker/ESM 限制
  * 纯 Node.js 环境中 pathToFileURL 可靠工作
  */
-async function extractPdfText(buffer: Buffer): Promise<string> {
-  // 将 buffer 写入临时文件
-  const tmpFile = join(tmpdir(), `smartdoc-pdf-${Date.now()}.pdf`);
+async function extractViaChildProcess(
+  buffer: Buffer,
+  ext: string
+): Promise<string> {
+  // 将 buffer 写入临时文件（子进程需要文件路径）
+  const tmpFile = join(tmpdir(), `smartdoc-${Date.now()}.${ext}`);
   writeFileSync(tmpFile, buffer);
 
   // 动态构建脚本路径（避免 Turbopack 静态分析报错）
   const cwd = process.cwd();
-  const scriptSegments = [cwd, "src", "scripts", "pdf-extract.mjs"];
+  const scriptSegments = [cwd, "src", "scripts", "doc-extract.mjs"];
   const scriptPath = scriptSegments.join("/");
 
   try {
-    const result = await new Promise<{ text: string; pages: number }>(
+    const result = await new Promise<{ text: string; pages: number | null }>(
       (resolve, reject) => {
         execFile(
           "node",
           [scriptPath, tmpFile],
           {
-            timeout: 30000,
-            maxBuffer: 10 * 1024 * 1024, // 10MB
+            timeout: 60000, // 60s 超时（大文件可能较慢）
+            maxBuffer: 20 * 1024 * 1024, // 20MB
           },
           (error, stdout, stderr) => {
             if (error) {
@@ -51,15 +67,18 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
               return;
             }
             try {
-              // 从 stdout 中提取 __PDF_RESULT__ 标记之间的 JSON
-              const marker = "__PDF_RESULT__";
+              // 从 stdout 中提取 __DOC_RESULT__ 标记之间的 JSON
+              const marker = "__DOC_RESULT__";
               const startIdx = stdout.indexOf(marker);
               const endIdx = stdout.lastIndexOf(marker);
               if (startIdx === -1 || endIdx === startIdx) {
-                reject(new Error(stderr || "PDF 解析输出解析失败"));
+                reject(new Error(stderr || "文档解析输出解析失败"));
                 return;
               }
-              const jsonStr = stdout.substring(startIdx + marker.length, endIdx);
+              const jsonStr = stdout.substring(
+                startIdx + marker.length,
+                endIdx
+              );
               const parsed = JSON.parse(jsonStr);
               if (parsed.error) {
                 reject(new Error(parsed.error));
@@ -67,7 +86,7 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
               }
               resolve(parsed);
             } catch {
-              reject(new Error(stderr || "PDF 解析输出解析失败"));
+              reject(new Error(stderr || "文档解析输出解析失败"));
             }
           }
         );
@@ -88,13 +107,15 @@ async function extractPdfText(buffer: Buffer): Promise<string> {
 // ==================== 文本清洗 ====================
 
 export function cleanText(raw: string): string {
-  return raw
-    .replace(/\0/g, "") // 去除空字符
-    .replace(/\r\n/g, "\n") // 统一换行符
-    .replace(/\t/g, " ") // Tab 转空格
-    .replace(/[ \t]+/g, " ") // 多空格合并
-    .replace(/\n{3,}/g, "\n\n") // 多空行合并为两个
-    .trim();
+  return (
+    raw
+      .replace(/\0/g, "") // 去除空字符
+      .replace(/\r\n/g, "\n") // 统一换行符
+      .replace(/\t/g, " ") // Tab 转空格
+      .replace(/[ \t]+/g, " ") // 多空格合并
+      .replace(/\n{3,}/g, "\n\n") // 多空行合并为两个
+      .trim()
+  );
 }
 
 // ==================== 文本分块 ====================
