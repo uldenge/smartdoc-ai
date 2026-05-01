@@ -2,7 +2,15 @@
 
 import { useEffect, useState } from "react";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+} from "@/components/ui/dialog";
 import { toast } from "sonner";
+import { TemplateUpload } from "@/components/doc-gen/template-upload";
 import type { DocTemplate, TemplateCategory } from "@/types";
 
 interface TemplateSelectorProps {
@@ -27,6 +35,7 @@ const CATEGORY_COLORS: Record<TemplateCategory, string> = {
 export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps) {
   const [templates, setTemplates] = useState<DocTemplate[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   useEffect(() => {
     fetchTemplates();
@@ -48,6 +57,13 @@ export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps
     }
   }
 
+  function handleTemplateUploaded(template: DocTemplate) {
+    setShowUploadDialog(false);
+    fetchTemplates(); // 刷新列表
+    onSelect(template); // 自动选中新模板
+    toast.success("模板上传成功");
+  }
+
   if (loading) {
     return (
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -58,54 +74,109 @@ export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps
     );
   }
 
-  if (templates.length === 0) {
-    return (
-      <div className="text-center py-10 text-muted-foreground">
-        暂无可用模板
-      </div>
-    );
-  }
-
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-      {templates.map((t) => (
-        <Card
-          key={t.id}
-          className={`cursor-pointer transition-all hover:shadow-md ${
-            selectedId === t.id
-              ? "ring-2 ring-primary shadow-md"
-              : "hover:border-primary/50"
-          }`}
-          onClick={() => onSelect(t)}
-        >
-          <CardHeader className="pb-3">
-            <div className="flex items-start justify-between gap-2">
-              <CardTitle className="text-base leading-tight">{t.name}</CardTitle>
-              {t.isSystem && (
-                <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
-                  系统
-                </span>
-              )}
-            </div>
-            <CardDescription className="text-xs line-clamp-2">
-              {t.description}
-            </CardDescription>
-          </CardHeader>
-          <div className="px-6 pb-4 flex items-center gap-2">
-            <span
-              className={`text-xs px-2 py-0.5 rounded-full ${CATEGORY_COLORS[t.category]}`}
+    <>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {templates.map((t) => {
+          // Supabase 返回 snake_case，需要兼容两种命名
+          const id = t.id;
+          const name = t.name;
+          const description = t.description;
+          const isSystem = (t as unknown as { is_system: boolean }).is_system ?? t.isSystem;
+          const category = ((t as unknown as { category: string }).category || "general") as TemplateCategory;
+          const sections = (t as unknown as { sections: { id: string; title: string }[] }).sections || [];
+          const variables = (t as unknown as { variables: { name: string }[] }).variables || [];
+
+          return (
+            <Card
+              key={id}
+              className={`cursor-pointer transition-all hover:shadow-md ${
+                selectedId === id
+                  ? "ring-2 ring-primary shadow-md"
+                  : "hover:border-primary/50"
+              }`}
+              onClick={() => onSelect(t)}
             >
-              {CATEGORY_LABELS[t.category]}
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {t.sections.length} 个章节
-            </span>
-            <span className="text-xs text-muted-foreground">
-              {t.variables.length} 个变量
-            </span>
-          </div>
+              <CardHeader className="pb-3">
+                <div className="flex items-start justify-between gap-2">
+                  <CardTitle className="text-base leading-tight">{name}</CardTitle>
+                  {isSystem && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary shrink-0">
+                      系统
+                    </span>
+                  )}
+                  {!isSystem && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 text-green-700 shrink-0">
+                      自定义
+                    </span>
+                  )}
+                </div>
+                <CardDescription className="text-xs line-clamp-2">
+                  {description}
+                </CardDescription>
+              </CardHeader>
+              <div className="px-6 pb-4 flex items-center gap-2">
+                <span
+                  className={`text-xs px-2 py-0.5 rounded-full ${CATEGORY_COLORS[category]}`}
+                >
+                  {CATEGORY_LABELS[category]}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {sections?.length || 0} 个章节
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  {variables?.length || 0} 个变量
+                </span>
+              </div>
+            </Card>
+          );
+        })}
+
+        {/* 上传自定义模板卡片 */}
+        <Card
+          className="cursor-pointer border-2 border-dashed hover:border-primary/50 hover:bg-muted/30 transition-all"
+          onClick={() => setShowUploadDialog(true)}
+        >
+          <CardHeader className="pb-3 flex items-center justify-center min-h-[120px]">
+            <div className="text-center text-muted-foreground">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="32"
+                height="32"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                className="mx-auto mb-2"
+              >
+                <path d="M12 5v14" />
+                <path d="M5 12h14" />
+              </svg>
+              <p className="text-sm font-medium">上传自定义模板</p>
+              <p className="text-xs mt-1">支持 .md Markdown 文件</p>
+            </div>
+          </CardHeader>
         </Card>
-      ))}
-    </div>
+      </div>
+
+      {/* 上传对话框 */}
+      <Dialog open={showUploadDialog} onOpenChange={setShowUploadDialog}>
+        <DialogContent className="sm:max-w-lg max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>上传自定义模板</DialogTitle>
+            <DialogDescription>
+              上传 Markdown 文件作为模板。使用 ## 标题定义章节，使用
+              {" {{变量名}} "}定义变量。
+            </DialogDescription>
+          </DialogHeader>
+          <TemplateUpload
+            onUploaded={handleTemplateUploaded}
+            onCancel={() => setShowUploadDialog(false)}
+          />
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
