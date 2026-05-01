@@ -99,3 +99,79 @@ export interface User {
   id: string;
   email: string;
 }
+
+// ==================== 文档模板 ====================
+
+export type TemplateCategory = "general" | "technical" | "requirement" | "design";
+
+export interface TemplateSection {
+  id: string;
+  title: string;
+  description: string;
+  prompt_hint: string;
+  required: boolean;
+}
+
+export interface TemplateVariable {
+  name: string;
+  label: string;
+  type: "text" | "textarea" | "select";
+  required: boolean;
+  default?: string;
+  options?: string[];
+}
+
+export interface DocTemplate {
+  id: string;
+  userId: string | null;
+  name: string;
+  description: string | null;
+  category: TemplateCategory;
+  isSystem: boolean;
+  sections: TemplateSection[];
+  variables: TemplateVariable[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CreateTemplateInput {
+  name: string;
+  description?: string;
+  category: TemplateCategory;
+  sections: TemplateSection[];
+  variables: TemplateVariable[];
+}
+
+// ==================== 生成文档 ====================
+
+export type GeneratedDocStatus = "draft" | "generating" | "completed" | "error";
+
+export interface SectionContent {
+  sectionId: string;
+  title: string;
+  content: string;
+  sources: MessageSource[];
+  status: "pending" | "generating" | "completed" | "error";
+}
+
+export interface GeneratedDocument {
+  id: string;
+  userId: string;
+  templateId: string;
+  knowledgeBaseId: string | null;
+  title: string;
+  status: GeneratedDocStatus;
+  variables: Record<string, string>;
+  sectionsContent: SectionContent[];
+  fullContent: string | null;
+  errorMessage: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface GenerateDocumentInput {
+  templateId: string;
+  knowledgeBaseId: string;
+  title: string;
+  variables: Record<string, string>;
+}

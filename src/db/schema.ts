@@ -6,6 +6,7 @@ import {
   integer,
   jsonb,
   index,
+  boolean,
 } from "drizzle-orm/pg-core";
 import { vector } from "drizzle-orm/pg-core";
 
@@ -79,4 +80,36 @@ export const messages = pgTable("messages", {
   content: text("content").notNull(),
   sources: jsonb("sources"), // 引用来源 [{ documentName, chunkContent, page }]
   createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ==================== 文档模板表 ====================
+
+export const docTemplates = pgTable("doc_templates", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id"), // NULL = 系统内置模板
+  name: text("name").notNull(),
+  description: text("description"),
+  category: text("category").notNull().default("general"),
+  isSystem: boolean("is_system").notNull().default(false),
+  sections: jsonb("sections").notNull(), // TemplateSection[]
+  variables: jsonb("variables").notNull().default([]), // TemplateVariable[]
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
+});
+
+// ==================== 生成文档表 ====================
+
+export const generatedDocuments = pgTable("generated_documents", {
+  id: uuid("id").defaultRandom().primaryKey(),
+  userId: text("user_id").notNull(),
+  templateId: uuid("template_id").notNull().references(() => docTemplates.id, { onDelete: "cascade" }),
+  knowledgeBaseId: uuid("knowledge_base_id").references(() => knowledgeBases.id, { onDelete: "set null" }),
+  title: text("title").notNull(),
+  status: text("status").notNull().default("draft"), // draft, generating, completed, error
+  variables: jsonb("variables").notNull().default({}), // Record<string, string>
+  sectionsContent: jsonb("sections_content").notNull().default([]), // SectionContent[]
+  fullContent: text("full_content"),
+  errorMessage: text("error_message"),
+  createdAt: timestamp("created_at", { withTimezone: true }).defaultNow().notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).defaultNow().notNull(),
 });
