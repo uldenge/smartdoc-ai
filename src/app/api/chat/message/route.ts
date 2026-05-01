@@ -68,7 +68,7 @@ export async function POST(request: Request) {
     try {
       searchResults = await searchSimilarChunks(
         content,
-        conversation.knowledge_base_id,
+        conversation.knowledge_base_id ? [conversation.knowledge_base_id] : [],
         user.id,
         5
       );

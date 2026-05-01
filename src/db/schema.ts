@@ -103,7 +103,7 @@ export const generatedDocuments = pgTable("generated_documents", {
   id: uuid("id").defaultRandom().primaryKey(),
   userId: text("user_id").notNull(),
   templateId: uuid("template_id").notNull().references(() => docTemplates.id, { onDelete: "cascade" }),
-  knowledgeBaseId: uuid("knowledge_base_id").references(() => knowledgeBases.id, { onDelete: "set null" }),
+  knowledgeBaseIds: jsonb("knowledge_base_ids").notNull().default([]), // UUID[]
   title: text("title").notNull(),
   status: text("status").notNull().default("draft"), // draft, generating, completed, error
   variables: jsonb("variables").notNull().default({}), // Record<string, string>

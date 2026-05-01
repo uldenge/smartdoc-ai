@@ -17,7 +17,7 @@ export default async function DocGenDetailPage({
   // 获取文档详情
   const { data: doc } = await supabase
     .from("generated_documents")
-    .select("id, title, status, template_id, knowledge_base_id, variables, sections_content, full_content, error_message, created_at, updated_at")
+    .select("id, title, status, template_id, knowledge_base_ids, variables, sections_content, full_content, error_message, created_at, updated_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -39,7 +39,7 @@ export default async function DocGenDetailPage({
     title: doc.title,
     status: doc.status as "draft" | "generating" | "completed" | "error",
     templateId: doc.template_id,
-    knowledgeBaseId: doc.knowledge_base_id,
+    knowledgeBaseIds: (doc.knowledge_base_ids || []) as string[],
     variables: doc.variables as Record<string, string>,
     sectionsContent: (doc.sections_content || []) as SectionContent[],
     fullContent: doc.full_content,

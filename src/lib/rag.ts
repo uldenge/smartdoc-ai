@@ -15,23 +15,24 @@ export interface SearchResult {
 }
 
 /**
- * 语义检索：将用户问题转为向量，在 pgvector 中搜索最相似的文档片段
+ * 语义检索：将用户问题转为向量，在指定知识库中搜索最相似的文档片段
+ * 支持同时指定多个知识库
  */
 export async function searchSimilarChunks(
   query: string,
-  knowledgeBaseId: string,
+  knowledgeBaseIds: string[],
   userId: string,
   topK = 5
 ): Promise<SearchResult[]> {
   // Step 1: 将问题转为向量
   const queryEmbedding = await generateEmbedding(query);
 
-  // Step 2: 调用 Supabase RPC 进行向量相似度搜索
+  // Step 2: 调用 Supabase RPC 进行向量相似度搜索（传 UUID 数组）
   const supabase = await createClient();
 
   const { data, error } = await supabase.rpc("match_documents", {
     query_embedding: `[${queryEmbedding.join(",")}]`,
-    match_knowledge_base_id: knowledgeBaseId,
+    match_knowledge_base_ids: knowledgeBaseIds,
     match_user_id: userId,
     match_count: topK,
   });

@@ -22,7 +22,7 @@ export async function POST(
   // 获取生成文档
   const { data: doc } = await supabase
     .from("generated_documents")
-    .select("id, user_id, status, template_id, knowledge_base_id, variables")
+    .select("id, user_id, status, template_id, knowledge_base_ids, variables")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();
@@ -35,7 +35,8 @@ export async function POST(
     return NextResponse.json({ error: "文档正在生成中", code: "ALREADY_GENERATING" }, { status: 409 });
   }
 
-  if (!doc.knowledge_base_id) {
+  const kbIds = (doc.knowledge_base_ids as string[]) || [];
+  if (kbIds.length === 0) {
     return NextResponse.json({ error: "请先关联知识库", code: "MISSING_KB" }, { status: 400 });
   }
 
@@ -52,7 +53,6 @@ export async function POST(
 
   const sections = template.sections as TemplateSection[];
   const variables = (doc.variables as Record<string, string>) || {};
-  const kbId = doc.knowledge_base_id;
 
   // 更新状态为 generating
   await supabase
@@ -81,7 +81,7 @@ export async function POST(
           let ragContext = "";
           let sources: Awaited<ReturnType<typeof extractSources>> = [];
           try {
-            const searchResults = await searchSimilarChunks(resolvedHint, kbId, user.id, 8);
+            const searchResults = await searchSimilarChunks(resolvedHint, kbIds, user.id, 8);
             ragContext = buildRAGPrompt(searchResults);
             sources = extractSources(searchResults);
           } catch {

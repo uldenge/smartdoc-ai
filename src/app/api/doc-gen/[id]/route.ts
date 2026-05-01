@@ -16,7 +16,7 @@ export async function GET(
 
   const { data, error } = await supabase
     .from("generated_documents")
-    .select("id, title, status, template_id, knowledge_base_id, variables, sections_content, full_content, error_message, created_at, updated_at")
+    .select("id, title, status, template_id, knowledge_base_ids, variables, sections_content, full_content, error_message, created_at, updated_at")
     .eq("id", id)
     .eq("user_id", user.id)
     .single();

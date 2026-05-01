@@ -16,7 +16,7 @@ interface DocData {
   title: string;
   status: "draft" | "generating" | "completed" | "error";
   templateId: string;
-  knowledgeBaseId: string | null;
+  knowledgeBaseIds: string[];
   variables: Record<string, string>;
   sectionsContent: SectionContent[];
   fullContent: string | null;

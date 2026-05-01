@@ -158,7 +158,7 @@ export interface GeneratedDocument {
   id: string;
   userId: string;
   templateId: string;
-  knowledgeBaseId: string | null;
+  knowledgeBaseIds: string[];
   title: string;
   status: GeneratedDocStatus;
   variables: Record<string, string>;
@@ -171,7 +171,7 @@ export interface GeneratedDocument {
 
 export interface GenerateDocumentInput {
   templateId: string;
-  knowledgeBaseId: string;
+  knowledgeBaseIds: string[];
   title: string;
   variables: Record<string, string>;
 }

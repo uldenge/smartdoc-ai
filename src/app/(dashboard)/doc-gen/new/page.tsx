@@ -22,7 +22,7 @@ export default function NewDocGenPage() {
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<DocTemplate | null>(null);
   const [knowledgeBases, setKnowledgeBases] = useState<KnowledgeBase[]>([]);
-  const [selectedKbId, setSelectedKbId] = useState("");
+  const [selectedKbIds, setSelectedKbIds] = useState<string[]>([]);
   const [title, setTitle] = useState("");
   const [variables, setVariables] = useState<Record<string, string>>({});
   const [creating, setCreating] = useState(false);
@@ -52,7 +52,7 @@ export default function NewDocGenPage() {
       if (json.data) {
         setKnowledgeBases(json.data);
         if (json.data.length > 0) {
-          setSelectedKbId(json.data[0].id);
+          setSelectedKbIds([json.data[0].id]);
         }
       }
     } catch {
@@ -65,8 +65,8 @@ export default function NewDocGenPage() {
       toast.error("请选择模板");
       return;
     }
-    if (!selectedKbId) {
-      toast.error("请选择知识库");
+    if (selectedKbIds.length === 0) {
+      toast.error("请选择至少一个知识库");
       return;
     }
     if (!title.trim()) {
@@ -90,7 +90,7 @@ export default function NewDocGenPage() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           templateId: selectedTemplate.id,
-          knowledgeBaseId: selectedKbId,
+          knowledgeBaseIds: selectedKbIds,
           title: title.trim(),
           variables,
         }),
@@ -178,7 +178,12 @@ export default function NewDocGenPage() {
               {/* 选择知识库 */}
               <div className="space-y-1.5">
                 <Label className="text-sm">
-                  选择知识库 <span className="text-destructive">*</span>
+                  选择知识库（可多选） <span className="text-destructive">*</span>
+                  {selectedKbIds.length > 0 && (
+                    <span className="text-muted-foreground font-normal ml-2">
+                      已选 {selectedKbIds.length} 个
+                    </span>
+                  )}
                 </Label>
                 {knowledgeBases.length === 0 ? (
                   <p className="text-sm text-muted-foreground">
@@ -186,24 +191,40 @@ export default function NewDocGenPage() {
                   </p>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                    {knowledgeBases.map((kb) => (
-                      <button
-                        key={kb.id}
-                        onClick={() => setSelectedKbId(kb.id)}
-                        className={`text-left p-3 rounded-lg border transition-colors text-sm ${
-                          selectedKbId === kb.id
-                            ? "border-primary bg-primary/5"
-                            : "hover:border-primary/50"
-                        }`}
-                      >
-                        <div className="font-medium">{kb.name}</div>
-                        {kb.description && (
-                          <div className="text-xs text-muted-foreground mt-1">
-                            {kb.description}
+                    {knowledgeBases.map((kb) => {
+                      const isSelected = selectedKbIds.includes(kb.id);
+                      return (
+                        <button
+                          key={kb.id}
+                          onClick={() => {
+                            setSelectedKbIds((prev) =>
+                              isSelected
+                                ? prev.filter((id) => id !== kb.id)
+                                : [...prev, kb.id]
+                            );
+                          }}
+                          className={`text-left p-3 rounded-lg border transition-colors text-sm ${
+                            isSelected
+                              ? "border-primary bg-primary/5 ring-1 ring-primary/30"
+                              : "hover:border-primary/50"
+                          }`}
+                        >
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{kb.name}</span>
+                            {isSelected && (
+                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary shrink-0">
+                                <polyline points="20 6 9 17 4 12" />
+                              </svg>
+                            )}
                           </div>
-                        )}
-                      </button>
-                    ))}
+                          {kb.description && (
+                            <div className="text-xs text-muted-foreground mt-1">
+                              {kb.description}
+                            </div>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -280,10 +301,15 @@ export default function NewDocGenPage() {
                 <span className="text-muted-foreground">模板</span>
                 <span className="font-medium">{selectedTemplate.name}</span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">知识库</span>
-                <span className="font-medium">
-                  {knowledgeBases.find((kb) => kb.id === selectedKbId)?.name || "未选择"}
+              <div className="flex justify-between items-start">
+                <span className="text-muted-foreground shrink-0">知识库</span>
+                <span className="font-medium text-right">
+                  {selectedKbIds.length === 0
+                    ? "未选择"
+                    : selectedKbIds
+                        .map((id) => knowledgeBases.find((kb) => kb.id === id)?.name)
+                        .filter(Boolean)
+                        .join("、")}
                 </span>
               </div>
               <div className="flex justify-between">
