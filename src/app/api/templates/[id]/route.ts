@@ -56,18 +56,17 @@ export async function PUT(
     .eq("id", id)
     .eq("user_id", user.id)
     .eq("is_system", false)
-    .select("id, name, description, category, is_system, sections, variables, created_at, updated_at")
-    .single();
+    .select("id, name, description, category, is_system, sections, variables, created_at, updated_at");
 
   if (error) {
     return NextResponse.json({ error: error.message, code: "DB_ERROR" }, { status: 500 });
   }
 
-  if (!data) {
+  if (!data || data.length === 0) {
     return NextResponse.json({ error: "无法更新此模板（系统模板或无权限）", code: "FORBIDDEN" }, { status: 403 });
   }
 
-  return NextResponse.json({ data, error: null });
+  return NextResponse.json({ data: data[0], error: null });
 }
 
 // DELETE /api/templates/[id] — 删除自定义模板
@@ -83,15 +82,19 @@ export async function DELETE(
     return NextResponse.json({ error: "未登录", code: "UNAUTHORIZED" }, { status: 401 });
   }
 
-  const { error } = await supabase
+  const { error, count } = await supabase
     .from("doc_templates")
-    .delete()
+    .delete({ count: "exact" })
     .eq("id", id)
     .eq("user_id", user.id)
     .eq("is_system", false);
 
   if (error) {
     return NextResponse.json({ error: error.message, code: "DB_ERROR" }, { status: 500 });
+  }
+
+  if (!count || count === 0) {
+    return NextResponse.json({ error: "无法删除此模板（系统模板或无权限）", code: "FORBIDDEN" }, { status: 403 });
   }
 
   return NextResponse.json({ data: { message: "删除成功" }, error: null });

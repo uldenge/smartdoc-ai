@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Card, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import {
   Dialog,
@@ -115,22 +116,78 @@ export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps
                   {description}
                 </CardDescription>
               </CardHeader>
-              <div className="px-6 pb-4 flex items-center gap-2">
+              <div className="px-6 pb-3 flex items-center gap-2">
                 <span
                   className={`text-xs px-2 py-0.5 rounded-full ${CATEGORY_COLORS[category]}`}
                 >
                   {CATEGORY_LABELS[category]}
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {sections?.length || 0} 个章节
+                  {sections?.length || 0} 章节
                 </span>
                 <span className="text-xs text-muted-foreground">
-                  {variables?.length || 0} 个变量
+                  {variables?.length || 0} 变量
                 </span>
+              </div>
+              {/* 操作按钮 */}
+              <div className="px-6 pb-3 flex gap-2">
+                <button
+                  className="text-xs text-primary hover:underline"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onSelect(t);
+                  }}
+                >
+                  选择
+                </button>
+                {isSystem ? (
+                  <Link
+                    href={`/doc-gen/templates/${id}/view`}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    查看
+                  </Link>
+                ) : (
+                  <Link
+                    href={`/doc-gen/templates/${id}/edit`}
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    编辑
+                  </Link>
+                )}
               </div>
             </Card>
           );
         })}
+
+        {/* 在线创建模板卡片 */}
+        <Link href="/doc-gen/templates/new">
+          <Card className="cursor-pointer border-2 border-dashed hover:border-primary/50 hover:bg-muted/30 transition-all h-full">
+            <CardHeader className="pb-3 flex items-center justify-center min-h-[120px]">
+              <div className="text-center text-muted-foreground">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="32"
+                  height="32"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  className="mx-auto mb-2"
+                >
+                  <path d="M12 5v14" />
+                  <path d="M5 12h14" />
+                </svg>
+                <p className="text-sm font-medium">在线创建模板</p>
+                <p className="text-xs mt-1">可视化编辑章节和变量</p>
+              </div>
+            </CardHeader>
+          </Card>
+        </Link>
 
         {/* 上传自定义模板卡片 */}
         <Card
@@ -141,8 +198,8 @@ export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps
             <div className="text-center text-muted-foreground">
               <svg
                 xmlns="http://www.w3.org/2000/svg"
-                width="32"
-                height="32"
+                width="28"
+                height="28"
                 viewBox="0 0 24 24"
                 fill="none"
                 stroke="currentColor"
@@ -151,11 +208,12 @@ export function TemplateSelector({ selectedId, onSelect }: TemplateSelectorProps
                 strokeLinejoin="round"
                 className="mx-auto mb-2"
               >
-                <path d="M12 5v14" />
-                <path d="M5 12h14" />
+                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                <polyline points="17 8 12 3 7 8" />
+                <line x1="12" y1="3" x2="12" y2="15" />
               </svg>
-              <p className="text-sm font-medium">上传自定义模板</p>
-              <p className="text-xs mt-1">支持 .md Markdown 文件</p>
+              <p className="text-sm font-medium">上传 Markdown 模板</p>
+              <p className="text-xs mt-1">上传 .md 文件作为模板</p>
             </div>
           </CardHeader>
         </Card>
